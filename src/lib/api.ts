@@ -5,7 +5,7 @@ import type { Clinic, ClinicDashboard, JoinRequest, UpdateClinicDto } from '@/do
 import type { Doctor, DoctorQueueAppointment, UpdateDoctorDto } from '@/domains/doctor/types'
 import type { Patient, PatientWithDocuments, CreatePatientDto, UpdatePatientDto, CreateDocumentDto } from '@/domains/patient/types'
 
-export const API_BASE = '/3eyadahub-api'
+export const API_BASE = 'http://localhost:19241/3eyadahub-api'
 
 export async function uploadFile(file: File): Promise<{ url: string; objectPath: string }> {
   const token = localStorage.getItem('token')
@@ -17,6 +17,14 @@ export async function uploadFile(file: File): Promise<{ url: string; objectPath:
     body: formData,
   })
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('profile')
+      window.location.href = '/auth'
+      throw new Error('Unauthorized')
+    }
     const err = await res.json().catch(() => ({ message: res.statusText }))
     throw new Error(err.message || 'Upload failed')
   }

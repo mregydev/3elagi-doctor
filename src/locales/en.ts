@@ -390,6 +390,7 @@ export default {
   doctorPatients: {
     future: 'Upcoming',
     past: 'Past',
+    all: 'All Patients',
     empty: 'No patients in this list.',
     hasIntake: 'Intake submitted',
   },

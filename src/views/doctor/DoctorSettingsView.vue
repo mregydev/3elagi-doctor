@@ -16,7 +16,7 @@
             >
               <img
                 v-if="form.photo_url"
-                :src="form.photo_url"
+                :src="resolveFileUrl(form.photo_url)"
                 :alt="form.name"
                 class="w-full h-full object-cover"
               />
@@ -235,7 +235,7 @@
         <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ $t('settings.signatureHint') }}</p>
         <FileField :label="''" v-model="form.digital_signature_url" image-only />
         <div v-if="form.digital_signature_url" class="bg-[hsl(var(--muted))] rounded-lg p-3 inline-block">
-          <img :src="form.digital_signature_url" class="h-16" />
+          <img :src="resolveFileUrl(form.digital_signature_url)" class="h-16" />
         </div>
       </section>
 
@@ -257,7 +257,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { UserCircle, FileText, PenLine, Camera, User, Upload, Trash2, Stethoscope, HelpCircle, Plus, Tag, X } from 'lucide-vue-next'
-import { apiFetch } from '@/lib/utils'
+import { apiFetch, resolveFileUrl } from '@/lib/utils'
 import { uploadFile } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import Field from '@/components/settings/Field.vue'

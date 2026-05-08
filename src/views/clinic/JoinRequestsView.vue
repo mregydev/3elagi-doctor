@@ -37,7 +37,7 @@
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             <div v-if="req.doctor?.photo_url" class="w-11 h-11 rounded-full overflow-hidden bg-blue-100 flex-shrink-0">
-              <img :src="req.doctor.photo_url" :alt="req.doctor.name" class="w-full h-full object-cover" />
+              <img :src="resolveFileUrl(req.doctor.photo_url)" :alt="req.doctor.name" class="w-full h-full object-cover" />
             </div>
             <div v-else class="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
               {{ req.doctor?.name?.charAt(0) || 'D' }}
@@ -69,7 +69,7 @@
           <div v-if="hasCredentials(req)" class="flex flex-wrap gap-2">
             <a
               v-if="req.doctor?.photo_url"
-              :href="req.doctor.photo_url"
+              :href="resolveFileUrl(req.doctor.photo_url)"
               target="_blank"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
             >
@@ -78,7 +78,7 @@
             </a>
             <a
               v-if="req.doctor?.graduation_cert_url"
-              :href="req.doctor.graduation_cert_url"
+              :href="resolveFileUrl(req.doctor.graduation_cert_url)"
               target="_blank"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
             >
@@ -87,7 +87,7 @@
             </a>
             <a
               v-if="req.doctor?.work_permit_url"
-              :href="req.doctor.work_permit_url"
+              :href="resolveFileUrl(req.doctor.work_permit_url)"
               target="_blank"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
             >
@@ -129,7 +129,7 @@ import { ref, computed } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Loader2, FileText, ImageIcon } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
-import { apiFetch } from '@/lib/utils'
+import { apiFetch, resolveFileUrl } from '@/lib/utils'
 import type { JoinRequest } from '@/domains/clinic/types'
 
 const auth = useAuthStore()

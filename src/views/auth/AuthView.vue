@@ -1,6 +1,7 @@
 <template>
+  <div class="max-h-screen w-screen overflow-auto">
   <div
-    class="min-h-screen flex items-center justify-center p-4 relative"
+    class="min-h-screen flex items-center justify-center p-4 relative bg-blue"
     style="background: hsl(var(--gray-0))"
     :dir="locale === 'ar' ? 'rtl' : 'ltr'"
   >
@@ -225,6 +226,7 @@
         </form>
       </div>
     </div>
+  </div>
   </div>
 </template>
 

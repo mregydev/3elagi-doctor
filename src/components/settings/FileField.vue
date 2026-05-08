@@ -14,10 +14,10 @@
           @change="onPick"
         />
       </label>
-      <a v-if="modelValue && !isImg(modelValue)" :href="modelValue" target="_blank" class="text-xs text-blue-600 underline">
+      <a v-if="modelValue && !isImg(modelValue)" :href="resolveFileUrl(modelValue)" target="_blank" class="text-xs text-blue-600 underline">
         {{ $t('patients.documents.file') }}
       </a>
-      <img v-if="modelValue && isImg(modelValue)" :src="modelValue" class="h-10 rounded border border-[hsl(var(--border))]" />
+      <img v-if="modelValue && isImg(modelValue)" :src="resolveFileUrl(modelValue)" class="h-10 rounded border border-[hsl(var(--border))]" />
     </div>
   </div>
 </template>
@@ -26,6 +26,7 @@
 import { ref } from 'vue'
 import { Upload } from 'lucide-vue-next'
 import { uploadFile } from '@/lib/api'
+import { resolveFileUrl } from '@/lib/utils'
 
 const props = defineProps<{ label?: string; modelValue: string; imageOnly?: boolean }>()
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()

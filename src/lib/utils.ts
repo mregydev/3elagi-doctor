@@ -12,6 +12,14 @@ export function apiUrl(path: string) {
   return `${API_BASE}${path}`
 }
 
+const STORAGE_BASE = 'https://hjluqxfmvpvtjvwzqxgi.supabase.co/storage/v1/object/public/files/uploads/'
+
+export function resolveFileUrl(path: string | null | undefined): string {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return STORAGE_BASE + path
+}
+
 interface ApiFetchOptions extends RequestInit {
   silent?: boolean
   successMessage?: string
@@ -42,6 +50,14 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     throw e
   }
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('profile')
+      window.location.href = '/auth'
+      throw new Error('Unauthorized')
+    }
     const err = await res.json().catch(() => ({ message: res.statusText }))
     const msg = err.message || 'Request failed'
     if (!silent) pushToast('error', Array.isArray(msg) ? msg.join(', ') : msg)

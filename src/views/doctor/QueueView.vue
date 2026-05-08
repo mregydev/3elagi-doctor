@@ -2,14 +2,25 @@
   <div class="p-4 md:p-6 space-y-5 md:space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h1 class="text-xl md:text-2xl font-bold">{{ $t('queue.title') }}</h1>
-      <button
-        @click="callNext"
-        :disabled="!hasWaiting || isCallingNext"
-        class="flex items-center justify-center gap-2 px-5 py-2.5 bg-[hsl(var(--primary))] text-white font-semibold text-sm rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity w-full sm:w-auto"
-      >
-        <ArrowDownToLine :size="16" />
-        {{ isCallingNext ? $t('common.loading') : $t('queue.callNext') }}
-      </button>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <a
+          v-if="defaultClinicId"
+          :href="`/tv/${defaultClinicId}`"
+          target="_blank"
+          class="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[hsl(var(--border))] text-[hsl(var(--foreground))] font-semibold text-sm rounded-xl hover:bg-[hsl(var(--muted))] transition-colors flex-1 sm:flex-none"
+        >
+          <Monitor :size="16" />
+          {{ $t('dashboard.openScreen') }}
+        </a>
+        <button
+          @click="callNext"
+          :disabled="!hasWaiting || isCallingNext"
+          class="flex items-center justify-center gap-2 px-5 py-2.5 bg-[hsl(var(--primary))] text-white font-semibold text-sm rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity flex-1 sm:flex-none"
+        >
+          <ArrowDownToLine :size="16" />
+          {{ isCallingNext ? $t('common.loading') : $t('queue.callNext') }}
+        </button>
+      </div>
     </div>
 
     <div v-if="isLoading" class="flex justify-center py-12">
@@ -97,7 +108,7 @@
 import { ref, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Loader2, ArrowDownToLine, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-vue-next'
+import { Loader2, ArrowDownToLine, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Monitor } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useDoctorQueue, useCallNextPatient } from '@/lib/api'
 import { apiFetch } from '@/lib/utils'
@@ -119,7 +130,8 @@ interface AppointmentDetail {
 const { locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
-const doctorId = computed(() => (auth.profile as { id?: string } | null)?.id)
+const doctorId = computed(() => (auth.profile as { id?: string; default_clinic_id?: string | null } | null)?.id)
+const defaultClinicId = computed(() => (auth.profile as { default_clinic_id?: string | null } | null)?.default_clinic_id)
 const today = computed(() => new Date().toISOString().split('T')[0])
 
 const { data: queue, isLoading } = useDoctorQueue(doctorId, today)

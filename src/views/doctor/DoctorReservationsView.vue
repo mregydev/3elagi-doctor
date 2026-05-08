@@ -1,8 +1,17 @@
 <template>
   <div class="p-4 md:p-6 max-w-5xl mx-auto" :dir="locale === 'ar' ? 'rtl' : 'ltr'">
-    <div class="mb-4">
-      <h1 class="text-xl md:text-2xl font-bold">{{ $t('reservations.title') }}</h1>
-      <p class="text-xs md:text-sm text-[hsl(var(--muted-foreground))] mt-1">{{ $t('reservations.subtitle') }}</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold">{{ $t('reservations.title') }}</h1>
+        <p class="text-xs md:text-sm text-[hsl(var(--muted-foreground))] mt-1">{{ $t('reservations.subtitle') }}</p>
+      </div>
+      <button
+        @click="openCreate"
+        class="flex items-center justify-center gap-2 px-4 py-2.5 bg-[hsl(var(--primary))] text-white text-sm font-semibold rounded-lg hover:opacity-90 w-full sm:w-auto"
+      >
+        <Plus :size="16" />
+        {{ $t('appointments.add') }}
+      </button>
     </div>
 
     <div v-if="isLoading" class="text-sm text-[hsl(var(--muted-foreground))]">{{ $t('common.loading') }}</div>
@@ -48,6 +57,7 @@
       </section>
     </div>
 
+    <!-- Intake answers modal -->
     <Teleport to="body">
       <div v-if="intakeModal" class="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="intakeModal = null">
         <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -65,17 +75,139 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Create appointment modal -->
+    <Teleport to="body">
+      <div v-if="showCreate" class="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" @click.self="closeCreate">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-md space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="flex items-center justify-between">
+            <h2 class="font-bold text-lg">{{ $t('appointments.create') }}</h2>
+            <button @click="closeCreate" class="p-1 rounded-lg hover:bg-[hsl(var(--muted))]">
+              <X :size="18" />
+            </button>
+          </div>
+          <form @submit.prevent="createAppointment" class="space-y-3">
+
+            <!-- Phone lookup -->
+            <div>
+              <label class="block text-xs font-medium mb-1">{{ $t('appointments.phone') }}</label>
+              <input
+                v-model="newAppt.patient_phone"
+                type="tel"
+                required
+                :placeholder="$t('patients.search')"
+                class="w-full px-3 py-2 text-sm border border-[hsl(var(--border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                @blur="lookupPatient"
+              />
+            </div>
+
+            <!-- Patient found banner -->
+            <div v-if="foundPatient" class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg">
+              <UserCheck :size="16" class="flex-shrink-0" />
+              <span>{{ $t('appointments.patientFound') }}: <strong>{{ foundPatient.name }}</strong></span>
+            </div>
+
+            <!-- Patient not found -->
+            <template v-else-if="newAppt.patient_phone && lookedUp">
+              <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm p-3 rounded-lg">
+                {{ $t('appointments.patientNotFound') }}
+              </div>
+              <button
+                type="button"
+                @click="showNewPatient = !showNewPatient"
+                class="flex items-center gap-2 text-sm text-[hsl(var(--primary))] font-semibold hover:underline"
+              >
+                <UserPlus :size="14" />
+                {{ $t('appointments.newPatient') }}
+              </button>
+
+              <div v-if="showNewPatient" class="border border-[hsl(var(--border))] rounded-xl p-4 space-y-3 bg-[hsl(var(--muted))]">
+                <p class="text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  {{ $t('appointments.newPatientDetails') }}
+                </p>
+                <div>
+                  <label class="block text-xs font-medium mb-1">{{ $t('patients.name') }}</label>
+                  <input
+                    v-model="newPatientForm.name"
+                    required
+                    class="w-full px-3 py-2 text-sm border border-[hsl(var(--border))] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                  />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium mb-1">{{ $t('patients.birthDate') }}</label>
+                    <input
+                      v-model="newPatientForm.birth_date"
+                      type="date"
+                      class="w-full px-3 py-2 text-sm border border-[hsl(var(--border))] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1">{{ $t('patients.age') }}</label>
+                    <input
+                      v-model.number="newPatientForm.age"
+                      type="number"
+                      min="0"
+                      class="w-full px-3 py-2 text-sm border border-[hsl(var(--border))] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Date & Time -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium mb-1">{{ $t('appointments.date') }}</label>
+                <input
+                  v-model="newAppt.date"
+                  type="date"
+                  required
+                  class="w-full px-3 py-2 text-sm border border-[hsl(var(--border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1">{{ $t('appointments.time') }}</label>
+                <input
+                  v-model="newAppt.time"
+                  type="time"
+                  class="w-full px-3 py-2 text-sm border border-[hsl(var(--border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
+                />
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-1">
+              <button
+                type="button"
+                @click="closeCreate"
+                class="flex-1 py-2.5 text-sm border border-[hsl(var(--border))] rounded-lg hover:bg-[hsl(var(--muted))]"
+              >
+                {{ $t('common.cancel') }}
+              </button>
+              <button
+                type="submit"
+                :disabled="saving"
+                class="flex-1 py-2.5 text-sm bg-[hsl(var(--primary))] text-white rounded-lg disabled:opacity-50 hover:opacity-90"
+              >
+                {{ saving ? $t('common.loading') : $t('common.save') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useQuery } from '@tanstack/vue-query'
-import { ClipboardList, X } from 'lucide-vue-next'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { ClipboardList, Plus, UserCheck, UserPlus, X } from 'lucide-vue-next'
 import { apiFetch } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth'
 import type { DoctorProfile } from '@/stores/auth'
+import type { Patient } from '@/domains/patient/types'
 
 interface Appt {
   id: string
@@ -99,7 +231,10 @@ interface IntakeTest { id: string; name: string; questions: IntakeQ[] }
 
 const { locale } = useI18n()
 const auth = useAuthStore()
-const doctorId = computed(() => (auth.profile as DoctorProfile | null)?.id)
+const qc = useQueryClient()
+const doctorProfile = computed(() => auth.profile as DoctorProfile | null)
+const doctorId = computed(() => doctorProfile.value?.id)
+const clinicId = computed(() => doctorProfile.value?.default_clinic_id ?? undefined)
 
 const { data, isLoading } = useQuery({
   queryKey: ['my-reservations', doctorId],
@@ -161,4 +296,100 @@ const intakeAnswersList = computed(() => {
     }
   })
 })
+
+// ── Create appointment ──────────────────────────────────────────────────────
+
+const showCreate = ref(false)
+const foundPatient = ref<Patient | null>(null)
+const lookedUp = ref(false)
+const showNewPatient = ref(false)
+const saving = ref(false)
+
+const newAppt = reactive({
+  patient_phone: '',
+  patient_id: undefined as string | undefined,
+  date: new Date().toISOString().split('T')[0],
+  time: '',
+})
+
+const newPatientForm = reactive({
+  name: '',
+  birth_date: '',
+  age: undefined as number | undefined,
+})
+
+watch(() => newPatientForm.birth_date, (d) => {
+  if (!d) return
+  const birth = new Date(d)
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  newPatientForm.age = age >= 0 ? age : undefined
+})
+
+function openCreate() {
+  showCreate.value = true
+}
+
+function closeCreate() {
+  showCreate.value = false
+  foundPatient.value = null
+  lookedUp.value = false
+  showNewPatient.value = false
+  Object.assign(newAppt, { patient_phone: '', patient_id: undefined, time: '', date: new Date().toISOString().split('T')[0] })
+  Object.assign(newPatientForm, { name: '', birth_date: '', age: undefined })
+}
+
+async function lookupPatient() {
+  if (!newAppt.patient_phone) return
+  newAppt.patient_id = undefined
+  lookedUp.value = false
+  foundPatient.value = null
+  showNewPatient.value = false
+  const params = new URLSearchParams({ phone: newAppt.patient_phone })
+  if (clinicId.value) params.set('clinic_id', clinicId.value)
+  const res = await apiFetch<Patient>(`/patients/lookup?${params.toString()}`).catch(() => null)
+  foundPatient.value = res
+  if (res) newAppt.patient_id = res.id
+  lookedUp.value = true
+}
+
+async function createAppointment() {
+  saving.value = true
+  try {
+    let patientId = newAppt.patient_id
+
+    if (!foundPatient.value && showNewPatient.value && newPatientForm.name) {
+      const created = await apiFetch<Patient>('/patients', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newPatientForm.name,
+          phone: newAppt.patient_phone,
+          birth_date: newPatientForm.birth_date || undefined,
+          age: newPatientForm.age,
+          ...(clinicId.value ? { clinic_id: clinicId.value } : {}),
+        }),
+      })
+      patientId = created.id
+      qc.invalidateQueries({ queryKey: ['patients'] })
+    }
+
+    await apiFetch('/appointments', {
+      method: 'POST',
+      body: JSON.stringify({
+        doctor_id: doctorId.value,
+        ...(clinicId.value ? { clinic_id: clinicId.value } : {}),
+        patient_phone: newAppt.patient_phone,
+        patient_id: patientId,
+        date: newAppt.date,
+        time: newAppt.time || undefined,
+      }),
+    })
+    qc.invalidateQueries({ queryKey: ['my-reservations'] })
+    closeCreate()
+  } finally {
+    saving.value = false
+  }
+}
 </script>

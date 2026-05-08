@@ -324,7 +324,7 @@
           <div class="mt-12 pt-3 border-t border-[hsl(var(--border))]">
             <div class="flex items-end justify-end">
               <div class="text-right">
-                <img v-if="profile?.digital_signature_url" :src="profile.digital_signature_url" class="h-12 ml-auto mb-1" />
+                <img v-if="profile?.digital_signature_url" :src="resolveFileUrl(profile.digital_signature_url)" class="h-12 ml-auto mb-1" />
                 <div class="text-xs text-[hsl(var(--muted-foreground))]">{{ $t('prescription.signature') }}</div>
                 <div class="text-sm font-semibold">{{ drPrefix }} {{ doctorName }}</div>
               </div>
@@ -342,7 +342,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, ArrowRight, Pill, Plus, Trash2, Send, Sparkles, Bookmark, X as XIcon } from 'lucide-vue-next'
-import { apiFetch } from '@/lib/utils'
+import { apiFetch, resolveFileUrl } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth'
 import type { Patient } from '@/domains/patient/types'
 import type { Prescription, PrescriptionItem, PrescriptionTemplate } from '@/domains/prescription/types'

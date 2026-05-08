@@ -197,7 +197,7 @@
                     style="width: 72px; height: 72px"
                   >
                     <img
-                      :src="doc.file_url"
+                      :src="resolveFileUrl(doc.file_url)"
                       :alt="doc.file_name || $t('patients.documents.file')"
                       class="w-full h-full object-cover"
                     />
@@ -208,7 +208,7 @@
                 </template>
                 <template v-else>
                   <a
-                    :href="doc.file_url"
+                    :href="resolveFileUrl(doc.file_url)"
                     target="_blank"
                     class="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                   >
@@ -339,7 +339,7 @@
           <!-- Image area -->
           <div class="flex-1 flex items-center justify-center p-4 bg-[hsl(var(--muted))]">
             <img
-              :src="lightboxUrl"
+              :src="resolveFileUrl(lightboxUrl)"
               class="max-w-full max-h-full object-contain rounded"
             />
           </div>
@@ -355,7 +355,7 @@ import { useRoute } from 'vue-router'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { Loader2, ArrowLeft, ArrowRight, Plus, Trash2, FileText, ExternalLink, Upload, ScanLine, FlaskConical, MessageSquare, Pill, ClipboardList, Maximize2, X, Printer } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
-import { apiFetch } from '@/lib/utils'
+import { apiFetch, resolveFileUrl } from '@/lib/utils'
 import { uploadFile } from '@/lib/api'
 import type { PatientWithDocuments, MedicalDocument, DocumentType } from '@/domains/patient/types'
 import type { Prescription } from '@/domains/prescription/types'

@@ -390,6 +390,7 @@ export default {
   doctorPatients: {
     future: 'القادمة',
     past: 'السابقة',
+    all: 'كل المرضى',
     empty: 'لا يوجد مرضى في هذه القائمة.',
     hasIntake: 'تم تعبئة الاستمارة',
   },
